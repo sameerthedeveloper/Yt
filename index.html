@@ -2,33 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Player App</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iPlay - YouTube</title>
   <meta name="theme-color" content="#1e3a8a" />
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAMFBMVEXMzMyWlpbT09PS0tK/v7+Ojo7u7u7FxcXk5OScnJzZ2dnf39/f39+UlJSioqJOTk7///9M0UfuAAAB2UlEQVR4nO3bS44CQQyF4c8o+P9r3mDSWZRJknrKON1M25LBHHk53wCAAAAAAAAAAAAwL8M6ThNdLrXmeuX1N9kDvvzbmo8y5puCec99zXiYlXZyA+5uNlmYEVzXfG8bi9WL27X7x9h6G9gOtZotVot1oZeqwu3+uyXrqw1eN3Tz3Sr+mf9WW9zB5zV9fxZjdXDPlfYeK+99zvfLTmfd2svkR7v+zHq7VcFhXr6W4bWrkEaqJUL3aKvrVas7a1qtcHRKvdfX9RpufVw9Es6i4nDNVl3fnZ2uJf4Yf3cF2K7TOjs4KAAAAAAAAAADAr/QD3V+CU7Wr5DYAAAAASUVORK5CYII=" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+        self.addEventListener('install', e => {
+          e.waitUntil(
+            caches.open('yt-app').then(cache => {
+              return cache.addAll(['./']);
+            })
+          );
+        });
+
+        self.addEventListener('fetch', e => {
+          e.respondWith(
+            caches.match(e.request).then(res => res || fetch(e.request))
+          );
+        });
+      `));
+    }
+  </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-  <div class="max-w-xl mx-auto mt-8 px-4">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">YouTube Search & Play</h1>
-      <button onclick="toggleDarkMode()" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md">Toggle Dark</button>
+<body class="bg-white dark:bg-black text-black dark:text-white transition duration-300">
+  <div class="max-w-md mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold">iPlay</h1>
+      <button onclick="toggleDarkMode()" class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700">Dark</button>
     </div>
 
     <div class="flex gap-2 mb-4">
-      <input id="searchQuery" type="text" placeholder="Search videos..."
-        class="flex-grow p-2 border rounded-md dark:bg-gray-800 dark:border-gray-600" />
+      <input id="searchQuery" type="text" placeholder="Search YouTube..."
+        class="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 outline-none" />
       <button onclick="searchYouTube()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Search</button>
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
     </div>
 
-    <div id="results" class="space-y-3 mb-4"></div>
-    <div id="player" class="rounded overflow-hidden"></div>
+    <div id="results" class="space-y-2 mb-4"></div>
+    <div id="player" class="rounded overflow-hidden aspect-video"></div>
   </div>
 
   <script>
-    const apiKey = 'AIzaSyAM9N5qo9BJh230Lfc02Mi1xFUx9DbE4XI';
+    const apiKey = 'AIzaSyAwrafiLbVfkfnmukvVXzEpvq_GjAEiF1Q'; //Replace with your own
 
     async function searchYouTube() {
       const query = document.getElementById('searchQuery').value;
@@ -43,28 +61,21 @@
         const videoId = item.id.videoId;
         const title = item.snippet.title;
         const div = document.createElement('div');
-        div.className = 'bg-gray-200 dark:bg-gray-800 p-3 rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-700';
-        div.innerText = title;
+        div.className = 'p-3 bg-gray-100 dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700';
+        div.textContent = title;
         div.onclick = () => loadVideo(videoId);
         results.appendChild(div);
       });
     }
 
     function loadVideo(videoId) {
-      document.getElementById('player').innerHTML =
-        `<iframe class="w-full aspect-video" src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1"
-         allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      const iframe = `<iframe class="w-full h-64 rounded" src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1"
+        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+      document.getElementById('player').innerHTML = iframe;
     }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark');
-    }
-
-    // PWA registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js');
-      });
     }
   </script>
 </body>
